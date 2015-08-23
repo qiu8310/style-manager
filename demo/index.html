@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="../build/style-manager.js"></script>
+    <link rel="stylesheet" href="css.css">
+</head>
+<body>
+
+<script>
+
+    var SM = new StyleManager(document.querySelector('link'));
+    console.log(SM);
+//
+//    var mr1 = SM.createMediaRule('.mr1', [
+//        {only: true, features: {width: '900px'}},
+//        {type: 'screen', features: {height: '300px'}}
+//    ]);
+//    var mr2 = SM.createMediaRule('.mr2', {not: true, features: {height: '400px'}});
+//
+//    mr1.updateStyle({color: 'red'});
+//    mr2.updateStyle({background: 'white'});
+//
+//    mr2.updateStyle({background: 'red'});
+//    mr1.removeStyleKeys(['color']);
+//
+//    SM.remove(mr1);
+//
+//    SM.each(function(mr) {
+//        console.log(mr.getCssText());
+//    });
+//    console.log(mr1, mr2);
+
+//    console.dir(document.querySelector('link').sheet.cssRules);
+</script>
+</body>
+</html>

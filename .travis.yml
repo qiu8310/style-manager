@@ -1,0 +1,38 @@
+language: node_js
+env:
+  matrix:
+    - CI=true TRAVIS=true
+
+sudo: false
+
+## blacklist
+#branches:
+#  except:
+#    - legacy
+#    - experimental
+#
+## whitelist
+#branches:
+#  only:
+#    - master
+#    - stable
+
+node_js:
+  - "iojs"
+  - "iojs-v1.7"
+  - "0.12"
+  - "0.11"
+
+script:
+  - npm run test
+
+after_script:
+  - npm run coveralls
+
+
+notifications:
+  email:
+    recipients:
+      - qiuzhongleiabc@126.com
+    on_success: never
+    on_failure: always
