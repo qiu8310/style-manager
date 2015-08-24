@@ -12,7 +12,8 @@ function getType(target) { return toString(target).slice(8, -1).toLowerCase(); }
 
 function checkType(target, types) {
     let type = getType(target);
-    if (Array.isArray(types)) return types.indexOf(type) >= 0;
+    if (Array.isArray(types)) return types.some(t => checkType(target, t));
+    
     if (typeof types === 'function') return target instanceof types;
     return types === type;
 }

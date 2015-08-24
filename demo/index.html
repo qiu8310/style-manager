@@ -2,37 +2,155 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <title>Style Manager Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <style id="__sm__demo">
+        .boxes {
+            margin: 0 auto;
+            width: 420px;
+            font-size: 0;
+            overflow: hidden;
+        }
+        .boxes .box {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+
+            margin: 20px;
+
+            line-height: 100px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .box {}
+
+        .box-a {
+            background: aqua;
+        }
+        .box-b {
+            background: blue;
+        }
+        .box-c {
+            background: chocolate;
+        }
+
+        @media only screen and (max-width: 640px) and (max-height: 1000000px) {
+            .boxes {
+                width: 100%;
+            }
+            .boxes .box {
+                display: block;
+                margin: 10px auto 10px auto;
+                width: 90%;
+                height: 50px;
+                line-height: 50px;
+            }
+        }
+    </style>
+    <script>
+        // bling.js
+        // https://gist.github.com/paulirish/12fb951a8b893a454b32
+
+        window.$ = document.querySelector.bind(document);
+
+        Node.prototype.on = window.on = function (name, fn) {
+            this.addEventListener(name, fn);
+        };
+
+        NodeList.prototype.__proto__ = Array.prototype;
+
+        NodeList.prototype.on = NodeList.prototype.addEventListener = function (name, fn) {
+            this.forEach(function (elem, i) {
+                elem.on(name, fn);
+            });
+        };
+
+        Array.prototype.find = function (fn) {
+            for (var i = 0; i < this.length; i++) if (fn(this[i], i, this)) return this[i];
+            return null;
+        }
+    </script>
     <script src="../build/style-manager.js"></script>
-    <link rel="stylesheet" href="css.css">
+    <script src="knockout/knockout-latest.debug.js"></script>
 </head>
 <body>
+<div class="welcome" data-bind="text: welcome"></div>
 
-<script>
+<div class="rule-of-thumbs" data-bind="foreach: { data: ruleOfThumbs }">
+    <p data-bind="attr: { class: 'thumb thumb-' + $index() }">
+        <span data-bind="text: $data"></span>
+    </p>
+</div>
 
-    var SM = new StyleManager(document.querySelector('link'));
-    console.log(SM);
-//
-//    var mr1 = SM.createMediaRule('.mr1', [
-//        {only: true, features: {width: '900px'}},
-//        {type: 'screen', features: {height: '300px'}}
-//    ]);
-//    var mr2 = SM.createMediaRule('.mr2', {not: true, features: {height: '400px'}});
-//
-//    mr1.updateStyle({color: 'red'});
-//    mr2.updateStyle({background: 'white'});
-//
-//    mr2.updateStyle({background: 'red'});
-//    mr1.removeStyleKeys(['color']);
-//
-//    SM.remove(mr1);
-//
-//    SM.each(function(mr) {
-//        console.log(mr.getCssText());
-//    });
-//    console.log(mr1, mr2);
+<main data-bind="visible: !welcome().length" style="display: none;">
+    <p class="tip">
+        本 DEMO 的源代码比较乱，主要是因为它只是演示 <a href="https://github.com/qiu8310/style-manager">style-manager</a> 的功能，
+        另外也是我第一次使用 <a href="http://knockoutjs.com/index.html">knockout</a> 开发</p>
 
-//    console.dir(document.querySelector('link').sheet.cssRules);
-</script>
+    <div class="html-view frame">
+        <div class="boxes">
+            <div class="box box-a">A</div>
+            <div class="box box-b">B</div>
+            <div class="box box-c">C</div>
+        </div>
+    </div>
+
+    <div class="editors">
+        <div class="sm-editor frame flex-container">
+            <div class="rules flex">
+                <label class="label">Style Rules:</label>
+                <!-- ko foreach: rules -->
+                <div class="rule"
+                     data-bind="click: $parent.activeRule, css: { active: $data == $parent.active() }">
+                    Index: <input style="width: 20px; text-align: center"
+                                  data-bind="value: index" />&nbsp;&nbsp;
+                    <!-- ko if: $data.rule.getSelectorSpecificity -->
+                    Specificity: <span data-bind="text: $data.rule.getSelectorSpecificity()"></span>
+                    <!-- /ko -->
+                    <pre data-bind="text: $data.rule.getCssText()"></pre>
+                </div>
+                <!-- /ko -->
+            </div>
+            <div class="editor flex-2">
+                <label class="label">Style Editor:</label>
+                <div class="media">
+                    <label><input type="checkbox" data-bind="checked: mediaEnabled" /> Enable media</label>
+                    <!-- ko if: mediaEnabled -->
+                    <div
+                        data-bind="component: {
+                        name: 'media-editor',
+                        params: {rule: active()}
+                    }"></div>
+                    <!-- /ko -->
+                    <!-- ko if: active().isStyleRule() || active().isMediaRule() -->
+                    <div
+                        data-bind="component: {
+                        name: 'style-editor',
+                        params: {rule: active()}
+                    }"></div>
+                    <!-- /ko -->
+                </div>
+                <div class="style"></div>
+            </div>
+        </div>
+
+        <div class="html-css-editor flex-container">
+            <div class="html-editor frame flex">
+            <textarea class="light-border"
+                      data-bind="value: html, valueUpdate: 'input'"
+                      placeholder="请输入HTML内容"></textarea>
+            </div>
+            <div class="css-editor frame flex">
+            <textarea class="light-border"
+                      data-bind="value: css, valueUpdate: 'input'"
+                      placeholder="请输入CSS内容"></textarea>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="script.js"></script>
 </body>
 </html>

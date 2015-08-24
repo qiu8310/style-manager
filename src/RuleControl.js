@@ -29,8 +29,8 @@ function getRuleCtorByType(type) {
  *
  * 1. 将 CSSMediaRule 中的 CSSStyleRule 独立出来，即使得一个 CSSMediaRule 中只能含有一个 CSSStyleRule
  * 2. 将 CSSStyleRule 中的 多 selector 拆分成单个 selector，例如将一个： a, b {} 拆分成两个： a {}  b {}
- * 3. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来
- * 4. 将 不含有任何 CSSStyleRule 的 CSSMediaRule 去掉
+ * // NO 3. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来
+ * // NO 4. 将 不含有任何 CSSStyleRule 的 CSSMediaRule 去掉
  *
  * @param {Stylesheet} sheet
  */

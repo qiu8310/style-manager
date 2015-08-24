@@ -20,6 +20,10 @@ export default class Rule {
         this._cbs = [];
     }
 
+    remove() { this.sm.remove(this); }
+
+    is(type) { return this.constructor.type === type; }
+
     _updateSheetLater(cb) {
         if (typeof cb === 'function') this._cbs.push(cb);
 
@@ -38,6 +42,8 @@ export default class Rule {
 
         // 不用更新
         if (cssText === this.getCssText()) return true;
+
+        console.debug('Transform opts %o to css text %o', this.opts, cssText);
 
         let index = sm.index(this);
         try {

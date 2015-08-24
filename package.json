@@ -1,7 +1,7 @@
 {
   "name": "style-manager",
   "description": "Manage style, add/replace/delete rules, support media.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "homepage": "https://github.com/qiu8310/style-manager",
   "bugs": "https://github.com/qiu8310/style-manager/issues",
   "license": "MIT",

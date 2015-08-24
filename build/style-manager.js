@@ -49,8 +49,8 @@ function getRuleCtorByType(type) {
  *
  * 1. 将 CSSMediaRule 中的 CSSStyleRule 独立出来，即使得一个 CSSMediaRule 中只能含有一个 CSSStyleRule
  * 2. 将 CSSStyleRule 中的 多 selector 拆分成单个 selector，例如将一个： a, b {} 拆分成两个： a {}  b {}
- * 3. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来
- * 4. 将 不含有任何 CSSStyleRule 的 CSSMediaRule 去掉
+ * // NO 3. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来
+ * // NO 4. 将 不含有任何 CSSStyleRule 的 CSSMediaRule 去掉
  *
  * @param {Stylesheet} sheet
  */
@@ -218,7 +218,7 @@ var _RuleControl2 = _interopRequireDefault(_RuleControl);
 
 var StyleManager = (function () {
     /**
-     * @param {Node|String} style - Style or Link Node Element or ID Selector
+     * @param {Node|String} style - Style or Link Node Element or ID
      * @param {Document} pageDocument
      */
 
@@ -228,14 +228,12 @@ var StyleManager = (function () {
         this.rc = _RuleControl2['default'];
         this.rules = [];
         this.document = pageDocument || document;
+        this.style = this.sheet = null;
 
         if (style.nodeType === Node.ELEMENT_NODE && style.sheet) {
-            this.sheet = style.sheet;
-
+            this.style = style;
             if (style.id) this.id = style.id;else this.id = style.id = '__sm__' + Date.now();
         } else if (typeof style === 'string') {
-
-            this.sheet = null;
             this.id = '__sm__' + style.replace(/[^\w-]/, '');
         } else {
             throw new Error('StyleManager constructor\'s parameter style is illegal .');
@@ -250,24 +248,16 @@ var StyleManager = (function () {
 
         // 初始化获取 sheet
         value: function _initSheet() {
-            var style = undefined,
-                rc = this.rc,
-                doc = this.document;
             var id = this.id;
-            var sheet = this.sheet;
+            var style = this.style;
 
-            if (!sheet) {
-                style = doc.querySelector('#' + id);
-                if (!style) style = _util2['default'].createStyleElement(doc, id);
-                sheet = this.sheet = style.sheet;
+            if (!style) {
+                style = this.document.querySelector('#' + id);
+                if (!style) style = _util2['default'].createStyleElement(this.document, id);
+                this.style = style;
             }
 
-            rc.flatStyleSheetRules(sheet);
-
-            var rules = sheet.cssRules;
-            for (var i = 0; i < rules.length; i++) {
-                this.rules.push(rc.createRuleByCssRule(rules[i], this));
-            }
+            this.update();
         }
 
         /**
@@ -290,6 +280,16 @@ var StyleManager = (function () {
         key: 'get',
         value: function get(index) {
             return this.rules[index];
+        }
+
+        /**
+         * 返回 rules 的一个副本
+         * @returns {Array.<Rule>}
+         */
+    }, {
+        key: 'getAll',
+        value: function getAll() {
+            return [].concat(this.rules);
         }
 
         /**
@@ -365,8 +365,6 @@ var StyleManager = (function () {
             if (ruleIndex !== index) {
                 this.remove(rule);
 
-                if (ruleIndex < index) index--;
-
                 this.insertCssText(rule.getCssText(), index);
                 cssRule = sheet.cssRules[index];
 
@@ -402,6 +400,41 @@ var StyleManager = (function () {
             for (var i = 0; i < this.rules.length; i++) {
                 this.sheet.deleteRule(0);
             }this.rules.length = 0;
+        }
+
+        /**
+         * 重新从 sheet 中解析 rules
+         *
+         * 因为 sheet 可能会被其它外部程序改变
+         */
+    }, {
+        key: 'update',
+        value: function update() {
+            this.rules.length = 0;
+
+            var sheet = this.sheet = this.style.sheet;
+            var rules = sheet.cssRules;
+            var rc = this.rc;
+
+            rc.flatStyleSheetRules(sheet);
+
+            for (var i = 0; i < rules.length; i++) {
+                this.rules.push(rc.createRuleByCssRule(rules[i], this));
+            }
+        }
+
+        /**
+         *
+         * @returns {String}
+         */
+    }, {
+        key: 'getCssText',
+        value: function getCssText() {
+            var result = [];
+            this.each(function (rule) {
+                return result.push(rule.getCssText());
+            });
+            return result.join('\n');
         }
     }, {
         key: 'length',
@@ -574,6 +607,20 @@ var MediaRule = (function (_Rule) {
         value: function getMediaText() {
             return this.cssRule.media.mediaText;
         }
+    }, {
+        key: 'toStyleRule',
+        value: function toStyleRule() {
+            var sm = this.sm;
+            var index = sm.index(this);
+
+            var rule = sm.create(CSSRule.STYLE_RULE, {
+                selector: this.opts.selector,
+                style: this.opts.style
+            }, index + 1);
+
+            sm.remove(this);
+            return rule;
+        }
 
         /**
          * 验证用户提供的 opts 是否合法
@@ -626,7 +673,7 @@ var MediaRule = (function (_Rule) {
 
         /**
          * 1. 将 CSSStyleRule 中的多 selector 扁平成单一的 selector
-         * 2. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来
+         * // NO: 2. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来（去掉，保留原有风格，或者此步放到压缩时候再做）
          * 3. 将 CSSMediaRule 中的 CSSStyleRule 独立出来，即使得一个 CSSMediaRule 中只能含有一个 CSSStyleRule
          *
          * @param {CSSRule|CssRule|CSSMediaRule} cssMediaRule
@@ -643,11 +690,11 @@ var MediaRule = (function (_Rule) {
                 rules = cssMediaRule.cssRules,
                 rulesLength = rules.length;
 
-            // media 中没有定义任何的 styleRule，则直接删除这个 mediaRule
-            if (!rulesLength) {
-                sheet.deleteRule(index);
-                return index;
-            }
+            //// media 中没有定义任何的 styleRule，则直接删除这个 mediaRule
+            //if (!rulesLength) {
+            //    sheet.deleteRule(index);
+            //    return index;
+            //}
 
             // 执行第 1 点
             while (i < rulesLength) {
@@ -656,24 +703,25 @@ var MediaRule = (function (_Rule) {
                 i = next;
             }
 
-            // 执行第 2 点
-            if (mediaText === 'all' || mediaText === 'only all') {
-                sheet.deleteRule(index);
-                index--;
+            //// 执行第 2 点
+            //if (mediaText === 'all' || mediaText === 'only all') {
+            //    sheet.deleteRule(index);
+            //    index--;
+            //
+            //    for (i = 0; i < rulesLength; i++) {
+            //        index += 1;
+            //        sheet.insertRule(rules[i].cssText, index);
+            //    }
+            //} else if (rulesLength > 1) {}
 
-                for (i = 0; i < rulesLength; i++) {
+            // 执行第 3 点 (如果执行了第 2 点就不能执行此点)
+            if (rulesLength > 1) {
+                for (i = 1; i < rulesLength; i++) {
                     index += 1;
-                    sheet.insertRule(rules[i].cssText, index);
+                    sheet.insertRule('@media ' + mediaText + ' {' + rules[1].cssText + '}', index);
+                    cssMediaRule.deleteRule(1);
                 }
-
-                // 执行第 3 点
-            } else if (rulesLength > 1) {
-                    for (i = 1; i < rulesLength; i++) {
-                        index += 1;
-                        sheet.insertRule('@media ' + mediaText + ' {' + rules[1].cssText + '}', index);
-                        cssMediaRule.deleteRule(1);
-                    }
-                }
+            }
 
             return index + 1;
         }
@@ -734,6 +782,16 @@ var Rule = (function () {
      */
 
     _createClass(Rule, [{
+        key: 'remove',
+        value: function remove() {
+            this.sm.remove(this);
+        }
+    }, {
+        key: 'is',
+        value: function is(type) {
+            return this.constructor.type === type;
+        }
+    }, {
         key: '_updateSheetLater',
         value: function _updateSheetLater(cb) {
             var _this = this;
@@ -756,6 +814,8 @@ var Rule = (function () {
 
             // 不用更新
             if (cssText === this.getCssText()) return true;
+
+            console.debug('Transform opts %o to css text %o', this.opts, cssText);
 
             var index = sm.index(this);
             try {
@@ -989,7 +1049,7 @@ Object.defineProperty(exports, '__esModule', {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x2, _x3, _x4) { var _again = true; _function: while (_again) { var object = _x2, property = _x3, receiver = _x4; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x2 = parent; _x3 = property; _x4 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -1016,6 +1076,23 @@ var StyleRule = (function (_Rule) {
         key: 'getSelectorSpecificity',
         value: function getSelectorSpecificity() {
             return _Rule3['default'].calculateSelectorSpecificity(this.opts.selector);
+        }
+    }, {
+        key: 'toMediaRule',
+        value: function toMediaRule() {
+            var mediaOpts = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+
+            var sm = this.sm;
+            var index = sm.index(this);
+
+            var rule = sm.create(CSSRule.MEDIA_RULE, {
+                selector: this.opts.selector,
+                style: this.opts.style,
+                media: mediaOpts || {}
+            }, index + 1);
+
+            sm.remove(this);
+            return rule;
         }
 
         /**
@@ -1229,31 +1306,52 @@ var MediaQuery = (function () {
 
 var Media = (function () {
     function Media(opts) {
+        var _this = this;
+
         _classCallCheck(this, Media);
 
-        var list = this.list = [];
+        this.list = [];
+
+        if (!opts) opts = { type: 'all' };
 
         var type = (0, _util.getType)(opts);
 
-        if (type === 'array' || type === 'object') {
-            [].concat(opts).forEach(function (opt) {
-                return list.push(parseObjectOptToQuery(opt));
+        if (Array.isArray(opts)) {
+            opts.forEach(function (opt) {
+                return _this.addMediaQuery(opt);
             });
-        } else if (type === 'string') {
-            opts.trim().split(/\s*,\s*/).forEach(function (opt) {
-                return list.push(parseStringOptToQuery(opt));
+        } else if (typeof opts === 'string') {
+            opts.split(',').forEach(function (opt) {
+                return _this.addMediaQuery(opt);
             });
         } else {
-            throw new Error('Not supported media argument parameter.');
+            this.addMediaQuery(opts);
         }
     }
 
     _createClass(Media, [{
-        key: 'get',
+        key: 'addMediaQuery',
+        value: function addMediaQuery(opt) {
+            var mq = undefined;
+            switch ((0, _util.getType)(opt)) {
+                case 'object':
+                    mq = parseObjectOptToQuery(opt);
+                    break;
+                case 'string':
+                    mq = parseStringOptToQuery(opt);
+                    break;
+                default:
+                    throw new Error('opt ' + opt + ' can not parse to media query.');
+            }
+            this.list.push(mq);
+            return mq;
+        }
 
         /**
          * @param {Number} index
          */
+    }, {
+        key: 'get',
         value: function get(index) {
             return this.list[index];
         }
@@ -1330,7 +1428,7 @@ function parseObjectOptToQuery(opt) {
 
     if (opt.not && opt.only) throw new Error('Media type modifier "not" and "only" should only use one of them.');
 
-    modifier = opt.not ? 'not' : opt.only ? 'only' : '';
+    modifier = opt.modifier || (opt.not ? 'not' : opt.only ? 'only' : '');
 
     features = parseObjectFeaturesToArray(opt.features);
 
@@ -1411,7 +1509,10 @@ function getType(target) {
 
 function checkType(target, types) {
     var type = getType(target);
-    if (Array.isArray(types)) return types.indexOf(type) >= 0;
+    if (Array.isArray(types)) return types.some(function (t) {
+        return checkType(target, t);
+    });
+
     if (typeof types === 'function') return target instanceof types;
     return types === type;
 }

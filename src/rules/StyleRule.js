@@ -8,6 +8,21 @@ export default class StyleRule extends Rule {
         return Rule.calculateSelectorSpecificity(this.opts.selector);
     }
 
+    toMediaRule(mediaOpts = null) {
+        let sm = this.sm;
+        let index = sm.index(this);
+
+        let rule = sm.create(CSSRule.MEDIA_RULE, {
+            selector: this.opts.selector,
+            style: this.opts.style,
+            media: mediaOpts || {}
+        }, index + 1);
+
+        sm.remove(this);
+        return rule;
+    }
+
+
     /**
      * 验证用户提供的 opts 是否合法
      * @param {Object} opts

@@ -77,7 +77,7 @@ import RuleControl from './RuleControl';
 
 export default class StyleManager {
     /**
-     * @param {Node|String} style - Style or Link Node Element or ID Selector
+     * @param {Node|String} style - Style or Link Node Element or ID
      * @param {Document} pageDocument
      */
     constructor(style, pageDocument) {
@@ -85,16 +85,14 @@ export default class StyleManager {
         this.rc = RuleControl;
         this.rules = [];
         this.document = pageDocument || document;
+        this.style = this.sheet = null;
 
         if (style.nodeType === Node.ELEMENT_NODE && style.sheet) {
-            this.sheet = style.sheet;
-
+            this.style = style;
             if (style.id) this.id = style.id;
             else this.id = style.id = '__sm__' + Date.now();
 
         } else if (typeof style === 'string') {
-
-            this.sheet = null;
             this.id = '__sm__' + style.replace(/[^\w-]/, '');
         } else {
             throw new Error('StyleManager constructor\'s parameter style is illegal .');
@@ -108,23 +106,15 @@ export default class StyleManager {
 
     // 初始化获取 sheet
     _initSheet() {
-        let style,
-            rc = this.rc,
-            doc = this.document;
-        let {id, sheet} = this;
+        let {id, style} = this;
 
-        if (!sheet) {
-            style = doc.querySelector('#' + id);
-            if (!style) style = util.createStyleElement(doc, id);
-            sheet = this.sheet = style.sheet;
+        if (!style) {
+            style = this.document.querySelector('#' + id);
+            if (!style) style = util.createStyleElement(this.document, id);
+            this.style = style;
         }
 
-        rc.flatStyleSheetRules(sheet);
-
-        let rules = sheet.cssRules;
-        for (let i = 0; i < rules.length; i++) {
-            this.rules.push(rc.createRuleByCssRule(rules[i], this));
-        }
+        this.update();
     }
 
     /**
@@ -143,6 +133,14 @@ export default class StyleManager {
      */
     get(index) {
         return this.rules[index];
+    }
+
+    /**
+     * 返回 rules 的一个副本
+     * @returns {Array.<Rule>}
+     */
+    getAll() {
+        return [].concat(this.rules);
     }
 
     /**
@@ -207,8 +205,6 @@ export default class StyleManager {
         if (ruleIndex !== index) {
             this.remove(rule);
 
-            if (ruleIndex < index) index--;
-
             this.insertCssText(rule.getCssText(), index);
             cssRule = sheet.cssRules[index];
 
@@ -239,6 +235,35 @@ export default class StyleManager {
     empty() {
         for (let i = 0; i < this.rules.length; i++) this.sheet.deleteRule(0);
         this.rules.length = 0;
+    }
+
+    /**
+     * 重新从 sheet 中解析 rules
+     *
+     * 因为 sheet 可能会被其它外部程序改变
+     */
+    update() {
+        this.rules.length = 0;
+
+        let sheet = this.sheet = this.style.sheet;
+        let rules = sheet.cssRules;
+        let rc = this.rc;
+
+        rc.flatStyleSheetRules(sheet);
+
+        for (let i = 0; i < rules.length; i++) {
+            this.rules.push(rc.createRuleByCssRule(rules[i], this));
+        }
+    }
+
+    /**
+     *
+     * @returns {String}
+     */
+    getCssText() {
+        let result = [];
+        this.each(rule => result.push(rule.getCssText()));
+        return result.join('\n');
     }
 
 }

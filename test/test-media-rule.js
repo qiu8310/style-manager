@@ -14,7 +14,7 @@ describe('MediaRule', () => {
     });
 
 
-    it.only('should be updated', (done) => {
+    it('should be updated', (done) => {
 
         let rule = sm.create(CSSRule.MEDIA_RULE, {
             selector: '.a',

@@ -132,7 +132,7 @@ class MediaQuery {
     }
 
     appendFeatures(features) {
-        this.features.push(...parseObjectFeaturesToArray(features))
+        this.features.push(...parseObjectFeaturesToArray(features));
     }
 
     toMediaText() {
@@ -157,21 +157,37 @@ class MediaQuery {
 
 export default class Media {
     constructor(opts) {
-        let list = this.list = [];
+        this.list = [];
 
-        let type = getType(opts);
-
-        if (type === 'array' || type === 'object') {
-            [].concat(opts).forEach(opt => list.push(parseObjectOptToQuery(opt)));
-        } else if (type === 'string') {
-            opts.trim().split(/\s*,\s*/).forEach(opt => list.push(parseStringOptToQuery(opt)));
+        if (!opts) opts = {type: 'all'};
+        
+        if (Array.isArray(opts)) {
+            opts.forEach(opt => this.addMediaQuery(opt));
+        } else if (typeof opts === 'string') {
+            opts.split(',').forEach(opt => this.addMediaQuery(opt));
         } else {
-            throw new Error(`Not supported media argument parameter.`);
+            this.addMediaQuery(opts);
         }
     }
 
     get length() {
         return this.list.length;
+    }
+
+    addMediaQuery(opt) {
+        let mq;
+        switch (getType(opt)) {
+            case 'object':
+                mq = parseObjectOptToQuery(opt);
+                break;
+            case 'string':
+                mq = parseStringOptToQuery(opt);
+                break;
+            default:
+                throw new Error('opt ' + opt + ' can not parse to media query.');
+        }
+        this.list.push(mq);
+        return mq;
     }
 
     /**
@@ -239,7 +255,7 @@ function parseObjectOptToQuery(opt) {
     if (opt.not && opt.only)
         throw new Error('Media type modifier "not" and "only" should only use one of them.');
 
-    modifier = opt.not ? 'not' : (opt.only ? 'only' : '');
+    modifier = opt.modifier || (opt.not ? 'not' : (opt.only ? 'only' : ''));
 
     features = parseObjectFeaturesToArray(opt.features);
 

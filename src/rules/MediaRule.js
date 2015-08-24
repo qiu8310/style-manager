@@ -14,6 +14,19 @@ export default class MediaRule extends Rule {
         return this.cssRule.media.mediaText;
     }
 
+    toStyleRule() {
+        let sm = this.sm;
+        let index = sm.index(this);
+
+        let rule = sm.create(CSSRule.STYLE_RULE, {
+            selector: this.opts.selector,
+            style: this.opts.style
+        }, index + 1);
+
+        sm.remove(this);
+        return rule;
+    }
+
     /**
      * 验证用户提供的 opts 是否合法
      * @param {Object} opts
@@ -58,7 +71,7 @@ export default class MediaRule extends Rule {
 
     /**
      * 1. 将 CSSStyleRule 中的多 selector 扁平成单一的 selector
-     * 2. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来
+     * // NO: 2. 将 @media [only] all {} 中的 CSSStyleRule 放到全局中来（去掉，保留原有风格，或者此步放到压缩时候再做）
      * 3. 将 CSSMediaRule 中的 CSSStyleRule 独立出来，即使得一个 CSSMediaRule 中只能含有一个 CSSStyleRule
      *
      * @param {CSSRule|CssRule|CSSMediaRule} cssMediaRule
@@ -72,11 +85,11 @@ export default class MediaRule extends Rule {
             rules = cssMediaRule.cssRules,
             rulesLength = rules.length;
 
-        // media 中没有定义任何的 styleRule，则直接删除这个 mediaRule
-        if (!rulesLength) {
-            sheet.deleteRule(index);
-            return index;
-        }
+        //// media 中没有定义任何的 styleRule，则直接删除这个 mediaRule
+        //if (!rulesLength) {
+        //    sheet.deleteRule(index);
+        //    return index;
+        //}
 
         // 执行第 1 点
         while (i < rulesLength) {
@@ -86,18 +99,19 @@ export default class MediaRule extends Rule {
         }
 
 
-        // 执行第 2 点
-        if (mediaText === 'all' || mediaText === 'only all') {
-            sheet.deleteRule(index);
-            index--;
+        //// 执行第 2 点
+        //if (mediaText === 'all' || mediaText === 'only all') {
+        //    sheet.deleteRule(index);
+        //    index--;
+        //
+        //    for (i = 0; i < rulesLength; i++) {
+        //        index += 1;
+        //        sheet.insertRule(rules[i].cssText, index);
+        //    }
+        //} else if (rulesLength > 1) {}
 
-            for (i = 0; i < rulesLength; i++) {
-                index += 1;
-                sheet.insertRule(rules[i].cssText, index);
-            }
-
-        // 执行第 3 点
-        } else if (rulesLength > 1) {
+        // 执行第 3 点 (如果执行了第 2 点就不能执行此点)
+        if (rulesLength > 1) {
             for (i = 1; i < rulesLength; i++) {
                 index += 1;
                 sheet.insertRule(`@media ${mediaText} {${rules[1].cssText}}`, index);

@@ -1,0 +1,118 @@
+body {
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+textarea {
+  vertical-align: top;
+}
+
+.frame {
+  box-shadow: inset 1px -1px 10px rgba(0, 0, 0, .4);
+  margin: 10px;
+  overflow: hidden;
+}
+
+.welcome {
+  margin-top: 30px;
+  font-size: 30px;
+  text-align: center;
+  line-height: 60px;
+}
+.rule-of-thumbs .thumb, .tip {
+  text-align: center;
+  font-weight: bold;
+  font-style: italic;
+  color: #AAA;
+}
+
+.editors .flex-container {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+}
+.editors .flex {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  flex: 1;
+}
+.editors .flex-2 {
+  -webkit-box-flex: 2;
+  -webkit-flex: 2;
+  flex: 2;
+}
+
+.editors .light-border {
+  border: 1px solid rgba(125, 125, 125, .2);
+  outline: none;
+}
+
+.editors .sm-editor .label {
+  display: block;
+  text-align: center;
+  line-height: 30px;
+  font-weight: bold;
+  font-size: 18px;
+}
+.editors .sm-editor .rule {
+  overflow: scroll;
+  margin: 0 10px 10px;
+  padding: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(125, 125, 125, .3);
+}
+
+.editors .sm-editor .rule:nth-child(2n) {
+  background: rgb(249, 249, 249);
+}
+.editors .sm-editor .rule:hover {
+  background: rgb(245, 245, 245);
+}
+.editors .sm-editor .rule.active {
+  background: rgb(217, 237, 247);
+}
+
+.editors .sm-inner-editor {
+  padding: 10px;
+}
+.editors .sm-inner-editor .control-label {
+  display: inline-block;
+  width: 90px;
+}
+.editors .sm-inner-editor .row {
+  margin-bottom: 10px;
+}
+.editors .sm-inner-editor textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+.editors .sm-media-editor .media-query {
+  border: 1px solid rgba(125, 125, 125, .2);
+  padding: 10px;
+}
+.editors .sm-media-editor .media-query:only-child {
+  border: none;
+  padding: 0;
+}
+
+.editors .html-css-editor .frame {
+  padding: 10px;
+}
+.editors .html-css-editor textarea {
+  resize: vertical;
+  width: 100%;
+  height: 200px;
+  outline: none;
+}
+
+
+@media screen and (max-width: 600px) {
+  .editors .html-css-editor.flex-container {
+    display: block;
+  }
+}
+
