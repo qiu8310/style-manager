@@ -6,13 +6,10 @@
 [![Coverage Status][coveralls-image]][coveralls-url]
 
 
-
 Manage style, add/replace/delete rules, support media.
 
 
-
 ## Install
-
 
 
 ```bash
@@ -20,39 +17,75 @@ npm install --save style-manager
 ```
 
 
-
 ## Usage
 
-```javascript
-var styleManager = require('style-manager');
-styleManager(); // "awesome"
+[https://qiu8310.github.io/style-manager](https://qiu8310.github.io/style-manager)
+
 ```
+var sm = new StyleManager(document.querySelector('style'));
+```
+
 
 ## API
 
-_(Coming soon)_
+
+### Class.StyleManager
+
+#### create(ruleType, ruleOpts, insertIndex)
+
+创建 rule
+
+* ruleType 是 CSSRule.type 中的一个值
+* ruleOpts 不同的 rule， opts 不一样
+* insertIndex 要插入 sheet 的位置，默认是最后
+
+#### move(rule, newIndex)
+
+移动原来的 rule 来一个新的位置，其它的 rules 会自动更新位置
+
+**注意：返回一个新的 rule，原来的 rule 已经没有用了**
+
+#### remove(rule)
+
+删除指定的 rule
+
+#### empty()
+
+清空 rules
+
+#### update()
+
+当外部程序修改了 sheet 后，可以用此函数来重新更新下 sheet 下的 rules
+
+
+#### getAll()
+
+#### get(index)
+
+### index(rule)
+
+
+### Class.Rule
+
+#### remove()
+
+#### is(ruleType)
+
+#### setOpts(opts, cb)
+
+#### replaceOpts(opts, cb)
+
+#### forceUpdateSheet(cb)
+
+#### getCssText()
+
+
 
 
 ## Contributing
 
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [gulp](http://gulpjs.com/).
 
-
-## Reference
-* [CI Test for Browser](https://ci.testling.com/) - Run your browser tests on every push, demo project [js-traverse](https://github.com/substack/js-traverse)
-* [GA on Github](https://github.com/igrigorik/ga-beacon) - Google Analytics collector-as-a-service (using GA measurement protocol).
-* [idiomatic.js](https://github.com/rwaldron/idiomatic.js) - Principles of Writing Consistent, Idiomatic JavaScript
-* [Use jsdoc](http://usejsdoc.org/index.html)
-* [Using the ES6 transpiler Babel on Node.js](http://www.2ality.com/2015/03/babel-on-node.html)
-* [Node Collection](https://github.com/npm/newww/issues/313)
-  - [http://tools.ampersandjs.com/](http://tools.ampersandjs.com/)
-  - [https://github.com/sindresorhus/awesome-nodejs](https://github.com/sindresorhus/awesome-nodejs)
-  - [https://www.npmjs.com/package/frontend-npm-goodies](https://www.npmjs.com/package/frontend-npm-goodies)
-  - [https://github.com/Raynos/http-framework/wiki/Modules#response](https://github.com/Raynos/http-framework/wiki/Modules#response)
-  - [https://github.com/npm-dom](https://github.com/npm-dom)
-  - [https://www.npmjs.com/package/mad-science-modules](https://www.npmjs.com/package/mad-science-modules)
-  - [https://www.npmjs.com/package/npm-collection-language-tools#readme](https://www.npmjs.com/package/npm-collection-language-tools#readme)
-  - And more...
 
 
 ## History
