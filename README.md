@@ -80,6 +80,70 @@ var sm = new StyleManager(document.querySelector('style'));
 #### getCssText()
 
 
+## 原生的 Sheet 的结构
+
+```
+ sheet 的结构体
+
+ CSSStyleSheet
+    cssRules:   CSSRuleList
+    rules:      CSSRuleList     # cssRules 的别名，建议不要使用 rules，不兼容 IE
+    disabled:   Boolean
+    media:      MediaList       # 这里的 media 一般是一个空的 MediaList
+    ownerNode:  Node
+    ownerRule:
+    href:       String
+    title:      String
+    type:       String
+
+ CSSRuleList
+    [ CSSRule ] # CSSRule 包含了 CSSMediaRule 和 CSSStyleRule
+    length:     Number
+
+
+ CSSRule                # 可以理解成 CSSMediaRule 和 CSSStyleRule 的父类
+    cssText:            String
+    parentRule:         CSSRule
+    parentStyleSheet:   CSSStyleSheet
+    type:               Number
+
+    # @NOTE CSSMediaRule 上才有的属性
+    media:              MediaList
+
+    # @NOTE CSSStyleRule 上才有的属性
+    selectorText:       String
+    style:              CSSStyleDeclaration  # 类似于 element.style，也是 CSSStyleRule 上专有的属性
+
+
+    CSSRule type 支持的值：
+        CSSRule.STYLE_RULE
+        CSSRule.MEDIA_RULE
+        CSSRule.FONT_FACE_RULE
+        CSSRule.PAGE_RULE
+        CSSRule.IMPORT_RULE
+        CSSRule.CHARSET_RULE
+        CSSRule.UNKNOWN_RULE
+        CSSRule.KEYFRAMES_RULE
+        CSSRule.KEYFRAME_RULE
+
+        # @NOTE reversed for future use
+        CSSRule.NAMESPACE_RULE
+        CSSRule.COUNTER_STYLE_RULE
+        CSSRule.SUPPORTS_RULE
+        CSSRule.DOCUMENT_RULE
+        CSSRule.FONT_FEATURE_VALUES_RULE
+        CSSRule.VIEWPORT_RULE
+        CSSRule.REGION_STYLE_RULE
+
+
+ MediaList
+    [ media query string]
+    length:     Number
+    mediaText:  String
+
+```
+
+
 ## History
 
 [CHANGELOG](CHANGELOG.md)
